@@ -6,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Models;
+using BooksApi.Models;
+using Microsoft.Extensions.Options;
+using BooksApi.Services;
 
 namespace TodoApi
 {
@@ -20,9 +23,19 @@ namespace TodoApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // requires using Microsoft.Extensions.Options
+            services.Configure<BookstoreDatabaseSettings>(
+                Configuration.GetSection(nameof(BookstoreDatabaseSettings)));
+
+            services.AddSingleton<IBookstoreDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<BookstoreDatabaseSettings>>().Value);
+
+            services.AddSingleton<BookService>();
+
             services.AddDbContext<TodoContext>(opt =>
                opt.UseInMemoryDatabase("TodoList"));
-            services.AddControllers();
+            services.AddControllers()
+                .AddNewtonsoftJson(options => options.UseMemberCasing());
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
